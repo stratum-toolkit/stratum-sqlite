@@ -1,0 +1,56 @@
+<!--
+  _sqljs-init.html
+  ─────────────────────────────────────────────────────────────────────────────
+  Drop this file in the root of your Quarto project and add this to _quarto.yml:
+
+    format:
+      html:
+        include-in-header: _sqljs-init.html
+
+  Then in _quarto.yml also declare your resources:
+
+    project:
+      resources:
+        - data/mydb.sqlite
+        - libs/sqljs/
+
+  Adjust window._dbPath and window._sqljsBase to match your file layout.
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+<script>
+(function () {
+  'use strict';
+
+  // Detect how deep the current page is below the site root.
+  // Quarto injects site_libs/ scripts on every page with a src relative to
+  // the current page.  Reading that prefix gives us a universal path back to
+  // the root that works for pages at any depth (e.g. /  /section/  /a/b/c/).
+  var siteLibScript = document.querySelector('script[src*="site_libs/"]');
+  var root = siteLibScript
+    ? siteLibScript.getAttribute('src').replace(/site_libs\/.*$/, '')
+    : '';
+
+  // ── Configure these two lines to match your project ──────────────────────
+  window._dbPath    = root + 'data/mydb.sqlite';   // path to your .sqlite file
+  window._sqljsBase = root + 'libs/sqljs/';        // folder with sql-wasm.js/.wasm
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Load sql.js and expose the initialised engine as a Promise so OJS cells
+  // can simply `await window._sqlJsReady` without worrying about timing.
+  window._sqlJsReady = new Promise(function (resolve, reject) {
+    var s = document.createElement('script');
+    s.src = window._sqljsBase + 'sql-wasm.js';
+    s.onload = function () {
+      initSqlJs({                       // global set by sql-wasm.js
+        locateFile: function () {
+          return window._sqljsBase + 'sql-wasm.wasm';
+        }
+      }).then(resolve).catch(reject);
+    };
+    s.onerror = function () {
+      reject(new Error('frozenql: failed to load sql.js from ' + s.src));
+    };
+    document.head.appendChild(s);
+  });
+}());
+</script>

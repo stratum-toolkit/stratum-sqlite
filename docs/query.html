@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL Console — frozenql demo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    textarea {
+      width: 100%; box-sizing: border-box;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      resize: vertical;
+      background: var(--surface);
+    }
+    .run-btn {
+      margin-top: 0.5rem;
+      padding: 0.5rem 1.5rem;
+      background: var(--accent);
+      color: #fff;
+      border: none; border-radius: 6px;
+      cursor: pointer; font-size: 1rem;
+    }
+    .run-btn:hover { filter: brightness(1.1); }
+    .schema-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .schema-table { background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.75rem; }
+    .schema-table h4 { margin: 0 0 0.4rem; color: var(--accent); }
+    .schema-table ul { margin: 0; padding-left: 1.2rem; font-size: 0.85rem; }
+    #error-box { color: #c0392b; font-family: monospace; white-space: pre-wrap; }
+    #row-count { font-size: 0.85rem; color: #666; margin-bottom: 0.4rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">🧊 frozenql</span>
+  <a href="index.html">Home</a>
+  <a href="viewer.html">Table Viewer</a>
+  <a href="query.html" class="active">SQL Console</a>
+  <a href="https://github.com/bx-dojo/frozenql">GitHub ↗</a>
+</nav>
+
+<main>
+  <h1>SQL Console</h1>
+  <p>Run any <code>SELECT</code> query against the demo database.
+     Same browser-cached copy — instant startup.</p>
+
+  <div id="status" class="status loading">⏳ Loading database…</div>
+
+  <div id="console-ui" style="display:none">
+
+    <section class="card">
+      <h2>Schema</h2>
+      <div class="schema-grid" id="schema"></div>
+    </section>
+
+    <section class="card">
+      <h2>Query</h2>
+      <textarea id="sql-input" rows="5">SELECT c.name, c.capital, c.region,
+       i.life_expectancy, i.internet_pct
+FROM   countries c
+JOIN   indicators i ON i.country_iso = c.iso3 AND i.year = 2022
+ORDER  BY i.life_expectancy DESC
+LIMIT  10;</textarea>
+      <br>
+      <button class="run-btn" id="run-btn">▶ Run query</button>
+    </section>
+
+    <section class="card">
+      <h2>Results</h2>
+      <div id="error-box"></div>
+      <div id="row-count"></div>
+      <div id="result-container"></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <p>frozenql — MIT license —
+  <a href="https://github.com/bx-dojo/frozenql">github.com/bx-dojo/frozenql</a></p>
+</footer>
+
+<script src="libs/sqljs/sql-wasm.js"></script>
+<script src="libs/sqljs/frozenql.umd.js"></script>
+
+<script type="module">
+  const statusEl    = document.getElementById('status');
+  const consoleEl   = document.getElementById('console-ui');
+  const schemaEl    = document.getElementById('schema');
+  const sqlInput    = document.getElementById('sql-input');
+  const runBtn      = document.getElementById('run-btn');
+  const errorBox    = document.getElementById('error-box');
+  const rowCount    = document.getElementById('row-count');
+  const resultEl    = document.getElementById('result-container');
+
+  let db;
+
+  try {
+    db = await FrozenQL.open('data/countries.sqlite', {
+      sqlJsPath: 'libs/sqljs/',
+      cacheKey:  'countries-demo@v1',
+    });
+
+    statusEl.className = 'status ok';
+    statusEl.textContent = '✓ Database ready';
+    consoleEl.style.display = '';
+
+    // Render schema
+    for (const table of db.tables()) {
+      const cols = db.columns(table);
+      const div = document.createElement('div');
+      div.className = 'schema-table';
+      div.innerHTML =
+        `<h4>${table}</h4><ul>` +
+        cols.map(c => `<li>${c.name} <em>${c.type}</em></li>`).join('') +
+        '</ul>';
+      schemaEl.appendChild(div);
+    }
+
+    runQuery();  // run default query on load
+  } catch (err) {
+    statusEl.className = 'status error';
+    statusEl.textContent = '✗ ' + err.message;
+  }
+
+  runBtn.addEventListener('click', runQuery);
+  sqlInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runQuery();
+  });
+
+  function runQuery() {
+    errorBox.textContent = '';
+    rowCount.textContent = '';
+    resultEl.innerHTML = '';
+
+    try {
+      const rows = db.query(sqlInput.value.trim());
+      rowCount.textContent = `${rows.length} row${rows.length !== 1 ? 's' : ''} returned`;
+      if (!rows.length) { resultEl.textContent = 'No results.'; return; }
+
+      const cols = Object.keys(rows[0]);
+      const t = document.createElement('table');
+      t.innerHTML =
+        '<thead><tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr></thead>' +
+        '<tbody>' +
+          rows.map(r =>
+            '<tr>' + cols.map(c => `<td>${r[c] ?? ''}</td>`).join('') + '</tr>'
+          ).join('') +
+        '</tbody>';
+      resultEl.appendChild(t);
+    } catch (err) {
+      errorBox.textContent = err.message;
+    }
+  }
+</script>
+
+</body>
+</html>

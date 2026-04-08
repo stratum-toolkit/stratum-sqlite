@@ -1,0 +1,98 @@
+/* ── Design tokens ────────────────────────────────────────────────────────── */
+:root {
+  --bg:       #f8f9fa;
+  --surface:  #ffffff;
+  --border:   #dee2e6;
+  --text:     #212529;
+  --muted:    #6c757d;
+  --accent:   #0d6efd;
+  --nav-bg:   #1a1a2e;
+  --nav-text: #e0e0e0;
+  --font:     system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono:     'Courier New', 'Fira Mono', monospace;
+}
+
+/* ── Reset / base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; }
+h1, h2, h3, h4 { margin-top: 0; }
+a { color: var(--accent); }
+code, pre { font-family: var(--mono); }
+pre {
+  background: #1e1e2e; color: #cdd6f4;
+  padding: 1rem 1.2rem; border-radius: 8px;
+  overflow-x: auto; font-size: 0.875rem; line-height: 1.55;
+}
+ul { padding-left: 1.5rem; }
+
+/* ── Nav ──────────────────────────────────────────────────────────────────── */
+nav {
+  display: flex; align-items: center; gap: 1.5rem;
+  background: var(--nav-bg); color: var(--nav-text);
+  padding: 0.75rem 2rem; flex-wrap: wrap;
+}
+nav .brand { font-weight: 700; font-size: 1.1rem; margin-right: auto; }
+nav a { color: var(--nav-text); text-decoration: none; font-size: 0.95rem; opacity: 0.8; }
+nav a:hover, nav a.active { opacity: 1; text-decoration: underline; }
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+main { max-width: 960px; margin: 2rem auto; padding: 0 1.25rem; }
+footer {
+  text-align: center; padding: 2rem; font-size: 0.85rem;
+  color: var(--muted); border-top: 1px solid var(--border); margin-top: 3rem;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────────── */
+.hero { padding: 2rem 0 1rem; }
+.hero h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+.lead { font-size: 1.15rem; color: var(--muted); max-width: 680px; }
+.badges { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+.badge {
+  background: var(--accent); color: #fff;
+  border-radius: 99px; padding: 0.2rem 0.75rem;
+  font-size: 0.8rem; font-weight: 600;
+}
+
+/* ── Card ─────────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.card h2 { font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+
+/* ── Status ───────────────────────────────────────────────────────────────── */
+.status {
+  padding: 0.6rem 1rem; border-radius: 6px;
+  margin-bottom: 1rem; font-weight: 500;
+}
+.status.loading { background: #fff3cd; color: #664d03; }
+.status.ok      { background: #d1e7dd; color: #0a3622; }
+.status.error   { background: #f8d7da; color: #58151c; }
+
+/* ── Controls ─────────────────────────────────────────────────────────────── */
+.controls {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 1rem; margin-bottom: 1rem;
+}
+.controls label { display: flex; align-items: center; gap: 0.4rem; }
+select, button {
+  padding: 0.35rem 0.6rem; border: 1px solid var(--border);
+  border-radius: 5px; font-size: 0.95rem;
+  background: var(--surface); cursor: pointer;
+}
+button:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Table ────────────────────────────────────────────────────────────────── */
+table {
+  width: 100%; border-collapse: collapse; font-size: 0.9rem;
+}
+th, td {
+  text-align: left; padding: 0.45rem 0.75rem;
+  border: 1px solid var(--border);
+}
+thead th { background: var(--bg); font-weight: 600; position: sticky; top: 0; }
+tbody tr:nth-child(even) { background: var(--bg); }
+tbody tr:hover { background: #e8f0fe; }
+#table-container, #result-container { overflow-x: auto; }

@@ -1,0 +1,92 @@
+---
+title: "Country Database Viewer"
+format:
+  html:
+    page-layout: full
+---
+
+This page queries `countries.sqlite` using sql.js loaded from `libs/sqljs/`.
+The database is fetched once and cached in the browser — other pages on this
+site reuse the same cached copy automatically.
+
+```{=html}
+<style>
+figure { width: 100%; max-width: 100%; }
+figure > div { width: 100%; overflow-x: auto; }
+table { width: 100%; }
+</style>
+```
+
+```{ojs}
+//| panel: sidebar
+
+// ── Open the database ──────────────────────────────────────────────────────
+// window._sqlJsReady and window._dbPath are set by _sqljs-init.html which
+// is injected into every page via _quarto.yml.
+db = {
+  const SqlJs = await window._sqlJsReady;
+  const response = await fetch(window._dbPath);
+  if (!response.ok) throw new Error(`DB fetch failed: ${response.status}`);
+  const raw = new SqlJs.Database(new Uint8Array(await response.arrayBuffer()));
+
+  // Return an Observable-compatible query wrapper
+  return {
+    query: (sql, params) => {
+      const results = raw.exec(sql, params);
+      if (!results.length) return [];
+      const { columns, values } = results[0];
+      return values.map(row =>
+        Object.fromEntries(columns.map((col, i) => [col, row[i]]))
+      );
+    },
+    count: (table) => {
+      const r = raw.exec(`SELECT COUNT(*) as n FROM "${table}"`);
+      return r[0]?.values[0][0] ?? 0;
+    },
+    tables: () => {
+      const r = raw.exec(
+        "SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+      );
+      return r[0]?.values.map(v => v[0]) ?? [];
+    }
+  };
+}
+
+// ── Table selector ─────────────────────────────────────────────────────────
+table_names = db.tables()
+
+viewof selected_table = Inputs.select(table_names, {
+  label: "Select Table:",
+  value: table_names[0]
+})
+
+// ── Rows per page selector ─────────────────────────────────────────────────
+viewof pageSize = Inputs.select([10, 20, 50, 100], {
+  label: "Rows per page:",
+  value: 20
+})
+```
+
+```{ojs}
+//| panel: fill
+
+// ── Pagination ─────────────────────────────────────────────────────────────
+total_rows = db.count(selected_table)
+max_page   = Math.ceil(total_rows / pageSize)
+
+viewof currentPage = Inputs.range([1, max_page], {
+  label: "Page:",
+  step: 1,
+  value: 1
+})
+
+md`**Page ${currentPage}** of ${max_page} &nbsp;*(${total_rows} total rows)*`
+
+// ── Fetch and display ───────────────────────────────────────────────────────
+offset     = (currentPage - 1) * pageSize
+data_paged = db.query(
+  `SELECT * FROM "${selected_table}" LIMIT ${pageSize} OFFSET ${offset}`
+)
+
+Inputs.table(data_paged, { layout: "auto", rows: pageSize })
+```

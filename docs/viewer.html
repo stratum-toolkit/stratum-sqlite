@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Table Viewer — frozenql demo</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+  <span class="brand">🧊 frozenql</span>
+  <a href="index.html">Home</a>
+  <a href="viewer.html" class="active">Table Viewer</a>
+  <a href="query.html">SQL Console</a>
+  <a href="https://github.com/bx-dojo/frozenql">GitHub ↗</a>
+</nav>
+
+<main>
+  <h1>Table Viewer</h1>
+  <p>This page reuses the same cached database loaded on the Home page — no second download.</p>
+
+  <div id="status" class="status loading">⏳ Loading database…</div>
+
+  <div id="controls" style="display:none" class="controls">
+    <label>
+      Table:
+      <select id="table-select"></select>
+    </label>
+    <label>
+      Rows per page:
+      <select id="page-size">
+        <option>10</option><option selected>20</option>
+        <option>50</option><option>100</option>
+      </select>
+    </label>
+    <span id="pagination-info"></span>
+    <button id="btn-prev">◀ Prev</button>
+    <button id="btn-next">Next ▶</button>
+  </div>
+
+  <div id="table-container"></div>
+</main>
+
+<footer>
+  <p>frozenql — MIT license —
+  <a href="https://github.com/bx-dojo/frozenql">github.com/bx-dojo/frozenql</a></p>
+</footer>
+
+<script src="libs/sqljs/sql-wasm.js"></script>
+<script src="libs/sqljs/frozenql.umd.js"></script>
+
+<script type="module">
+  const statusEl    = document.getElementById('status');
+  const controlsEl  = document.getElementById('controls');
+  const tableEl     = document.getElementById('table-select');
+  const pageSizeEl  = document.getElementById('page-size');
+  const pageInfoEl  = document.getElementById('pagination-info');
+  const prevBtn     = document.getElementById('btn-prev');
+  const nextBtn     = document.getElementById('btn-next');
+  const containerEl = document.getElementById('table-container');
+
+  let db, currentPage = 1, pageSize = 20, totalRows = 0;
+
+  // ── Load ─────────────────────────────────────────────────────────────────
+  try {
+    db = await FrozenQL.open('data/countries.sqlite', {
+      sqlJsPath: 'libs/sqljs/',
+      cacheKey:  'countries-demo@v1',  // same key → instant cache hit
+    });
+
+    statusEl.className = 'status ok';
+    statusEl.textContent = '✓ Database ready (served from browser cache)';
+    controlsEl.style.display = 'flex';
+
+    // Populate table dropdown
+    for (const name of db.tables()) {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = name;
+      tableEl.appendChild(opt);
+    }
+
+    renderPage();
+  } catch (err) {
+    statusEl.className = 'status error';
+    statusEl.textContent = '✗ ' + err.message;
+  }
+
+  // ── Event listeners ──────────────────────────────────────────────────────
+  tableEl.addEventListener('change', () => { currentPage = 1; renderPage(); });
+  pageSizeEl.addEventListener('change', () => {
+    pageSize = Number(pageSizeEl.value);
+    currentPage = 1;
+    renderPage();
+  });
+  prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderPage(); } });
+  nextBtn.addEventListener('click', () => {
+    const maxPage = Math.ceil(totalRows / pageSize);
+    if (currentPage < maxPage) { currentPage++; renderPage(); }
+  });
+
+  // ── Render ───────────────────────────────────────────────────────────────
+  function renderPage() {
+    const table = tableEl.value;
+    if (!table) return;
+
+    totalRows = db.count(table);
+    const maxPage = Math.ceil(totalRows / pageSize) || 1;
+    if (currentPage > maxPage) currentPage = maxPage;
+
+    const offset = (currentPage - 1) * pageSize;
+    const rows = db.query(`SELECT * FROM "${table}" LIMIT ${pageSize} OFFSET ${offset}`);
+
+    pageInfoEl.textContent = `Page ${currentPage} / ${maxPage}  (${totalRows} rows total)`;
+    prevBtn.disabled = currentPage <= 1;
+    nextBtn.disabled = currentPage >= maxPage;
+
+    renderTable(rows);
+  }
+
+  function renderTable(rows) {
+    containerEl.innerHTML = '';
+    if (!rows.length) { containerEl.textContent = 'No rows.'; return; }
+    const cols = Object.keys(rows[0]);
+    const t = document.createElement('table');
+    t.innerHTML =
+      '<thead><tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr></thead>' +
+      '<tbody>' +
+        rows.map(r =>
+          '<tr>' + cols.map(c => `<td>${r[c] ?? ''}</td>`).join('') + '</tr>'
+        ).join('') +
+      '</tbody>';
+    containerEl.appendChild(t);
+  }
+</script>
+
+</body>
+</html>

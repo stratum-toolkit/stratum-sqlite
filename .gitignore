@@ -1,0 +1,12 @@
+node_modules/
+*.log
+
+# sql.js binaries – downloaded by CI, not committed
+docs/libs/sqljs/sql-wasm.js
+docs/libs/sqljs/sql-wasm.wasm
+
+# Keep the frozenql library copy (it's built from src/)
+!docs/libs/sqljs/frozenql.umd.js
+!docs/libs/sqljs/frozenql.esm.js
+/.project
+/.idea/

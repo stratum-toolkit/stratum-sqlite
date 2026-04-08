@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>frozenql — demo</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+  <span class="brand">🧊 frozenql</span>
+  <a href="index.html" class="active">Home</a>
+  <a href="viewer.html">Table Viewer</a>
+  <a href="query.html">SQL Console</a>
+  <a href="https://github.com/bx-dojo/frozenql">GitHub ↗</a>
+</nav>
+
+<main>
+  <section class="hero">
+    <h1>frozenql</h1>
+    <p class="lead">
+      Load and query a read-only SQLite database on <strong>any static website</strong>
+      — plain HTML, Quarto, Jekyll, Hugo, and more.
+      No server. No backend. The file is cached in the browser after the first download.
+    </p>
+    <div class="badges">
+      <span class="badge">Zero dependencies</span>
+      <span class="badge">Works offline after first load</span>
+      <span class="badge">Browser Cache API</span>
+      <span class="badge">ObservableJS compatible</span>
+    </div>
+  </section>
+
+  <!-- live demo ─────────────────────────────────────────────────────────── -->
+  <section class="card">
+    <h2>Live demo</h2>
+    <p>The database below is the <code>countries.sqlite</code> file shipped with
+    this demo. It is fetched once, then served from your browser cache.</p>
+
+    <div id="status" class="status loading">⏳ Loading database…</div>
+
+    <div id="demo-output" style="display:none">
+      <h3>Top 5 countries by GDP</h3>
+      <div id="gdp-table"></div>
+
+      <h3>Nordic countries</h3>
+      <div id="nordic-table"></div>
+    </div>
+  </section>
+
+  <!-- quick start ────────────────────────────────────────────────────────── -->
+  <section class="card">
+    <h2>Quick start — plain HTML</h2>
+    <pre><code>&lt;!-- 1. Copy sql.js files into your project (see README) --&gt;
+&lt;script src="libs/sqljs/sql-wasm.js"&gt;&lt;/script&gt;
+&lt;script src="libs/sqljs/frozenql.umd.js"&gt;&lt;/script&gt;
+
+&lt;script type="module"&gt;
+  const db = await FrozenQL.open("data/mydb.sqlite", {
+    sqlJsPath: "libs/sqljs/",   // where sql-wasm.wasm lives
+    cacheKey:  "mydb@v1",       // bump version to force re-download
+  });
+
+  const rows = db.query("SELECT * FROM countries");
+  console.log(rows);
+
+  const tables = db.tables();   // list all tables
+&lt;/script&gt;</code></pre>
+  </section>
+
+  <section class="card">
+    <h2>Quick start — Quarto / ObservableJS</h2>
+    <pre><code>&lt;!-- In _sqljs-init.html (injected via _quarto.yml) --&gt;
+&lt;script&gt;
+  window._dbPath    = "data/mydb.sqlite";
+  window._sqljsBase = "libs/sqljs/";
+  window._sqlJsReady = new Promise((res, rej) =&gt; {
+    const s = document.createElement("script");
+    s.src = window._sqljsBase + "sql-wasm.js";
+    s.onload = () =&gt;
+      initSqlJs({ locateFile: () =&gt; window._sqljsBase + "sql-wasm.wasm" })
+        .then(res).catch(rej);
+    s.onerror = () =&gt; rej(new Error("sql.js load failed"));
+    document.head.appendChild(s);
+  });
+&lt;/script&gt;
+
+// In your .qmd file (OJS cell):
+db = {
+  const SqlJs = await window._sqlJsReady;
+  const r     = await fetch(window._dbPath);
+  const raw   = new SqlJs.Database(new Uint8Array(await r.arrayBuffer()));
+  return { query: sql =&gt; {
+    const res = raw.exec(sql);
+    if (!res.length) return [];
+    const { columns, values } = res[0];
+    return values.map(row =&gt;
+      Object.fromEntries(columns.map((c, i) =&gt; [c, row[i]])));
+  }};
+}</code></pre>
+  </section>
+
+  <section class="card">
+    <h2>Hosting your own database</h2>
+    <p>Your SQLite file can live anywhere that serves files with
+    <code>Access-Control-Allow-Origin: *</code>:</p>
+    <ul>
+      <li><strong>GitHub Releases</strong> — free, unlimited size, CORS-enabled</li>
+      <li><strong>GitHub Pages</strong> — same origin, no CORS header needed</li>
+      <li><strong>Zenodo / Figshare / OSF</strong> — public data repositories</li>
+      <li><strong>Cloudflare R2 / AWS S3</strong> — set a bucket CORS policy</li>
+    </ul>
+    <p>For files that change regularly, change the <code>cacheKey</code> version
+    whenever you publish a new release. The old cached file is evicted automatically.</p>
+  </section>
+</main>
+
+<footer>
+  <p>frozenql — MIT license —
+  <a href="https://github.com/bx-dojo/frozenql">github.com/bx-dojo/frozenql</a></p>
+</footer>
+
+<!-- sql.js and frozenql (served locally, no CDN) -->
+<script src="libs/sqljs/sql-wasm.js"></script>
+<script src="libs/sqljs/frozenql.umd.js"></script>
+
+<script type="module">
+  const statusEl = document.getElementById('status');
+  const outputEl = document.getElementById('demo-output');
+
+  try {
+    const db = await FrozenQL.open('data/countries.sqlite', {
+      sqlJsPath: 'libs/sqljs/',
+      cacheKey:  'countries-demo@v1',
+    });
+
+    statusEl.className = 'status ok';
+    statusEl.textContent = '✓ Database loaded — ' + db.count('countries') + ' countries';
+    outputEl.style.display = '';
+
+    renderTable(
+      document.getElementById('gdp-table'),
+      db.query('SELECT name, region, gdp_usd_bn FROM countries ORDER BY gdp_usd_bn DESC LIMIT 5')
+    );
+    renderTable(
+      document.getElementById('nordic-table'),
+      db.query("SELECT name, capital, population FROM countries WHERE subregion = 'Northern Europe' ORDER BY name")
+    );
+
+  } catch (err) {
+    statusEl.className = 'status error';
+    statusEl.textContent = '✗ ' + err.message;
+  }
+
+  function renderTable(container, rows) {
+    if (!rows.length) { container.textContent = 'No results.'; return; }
+    const cols = Object.keys(rows[0]);
+    const t = document.createElement('table');
+    t.innerHTML =
+      '<thead><tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr></thead>' +
+      '<tbody>' +
+        rows.map(r =>
+          '<tr>' + cols.map(c => `<td>${r[c] ?? ''}</td>`).join('') + '</tr>'
+        ).join('') +
+      '</tbody>';
+    container.appendChild(t);
+  }
+</script>
+
+</body>
+</html>

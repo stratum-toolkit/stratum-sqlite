@@ -1,6 +1,6 @@
 // build.mjs  –  builds two bundles from src/index.js
-//   dist/frozenql.umd.js   IIFE  global FrozenQL  (for <script> tags)
-//   dist/frozenql.esm.js   ES module                  (for import / bundlers)
+//   dist/stratum-sqlite.umd.js   IIFE  global StratumSQLite  (for <script> tags)
+//   dist/stratum-sqlite.esm.js   ES module                  (for import / bundlers)
 //
 // Run:  node build.mjs
 //       node build.mjs --watch
@@ -10,7 +10,7 @@ import { readFileSync } from 'fs';
 
 const pkg     = JSON.parse(readFileSync('./package.json', 'utf8'));
 const watch   = process.argv.includes('--watch');
-const banner  = `/* frozenql v${pkg.version} | MIT license | https://github.com/bx-dojo/frozenql */`;
+const banner  = `/* stratum-sqlite v${pkg.version} | MIT license | https://github.com/bx-dojo/stratum-sqlite */`;
 
 const shared = {
   entryPoints: ['src/index.js'],
@@ -27,22 +27,22 @@ async function build() {
   await esbuild.build({
     ...shared,
     format:     'iife',
-    globalName: 'FrozenQL',
-    outfile:    'dist/frozenql.umd.js',
+    globalName: 'StratumSQLite',
+    outfile:    'dist/stratum-sqlite.umd.js',
   });
 
   // ── ES module for import / bundlers ──────────────────────────────────────
   await esbuild.build({
     ...shared,
     format:  'esm',
-    outfile: 'dist/frozenql.esm.js',
+    outfile: 'dist/stratum-sqlite.esm.js',
   });
 
-  console.log(`✓  built  dist/frozenql.umd.js  +  dist/frozenql.esm.js`);
+  console.log(`✓  built  dist/stratum-sqlite.umd.js  +  dist/stratum-sqlite.esm.js`);
 }
 
 if (watch) {
-  const ctx = await esbuild.context({ ...shared, format: 'iife', globalName: 'FrozenQL', outfile: 'dist/frozenql.umd.js' });
+  const ctx = await esbuild.context({ ...shared, format: 'iife', globalName: 'StratumSQLite', outfile: 'dist/stratum-sqlite.umd.js' });
   await ctx.watch();
   console.log('Watching…');
 } else {

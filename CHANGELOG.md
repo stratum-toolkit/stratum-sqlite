@@ -6,6 +6,10 @@ As this project is still in active development, it does not yet strictly adhere 
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-04-09
+### Fixed
+- Incorrect package version
+
 ## [0.1.3] - 2026-04-09
 ### Fixed
 - GitHub npm release action

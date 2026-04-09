@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync } from 'fs';
 
 const pkg    = JSON.parse(readFileSync('./package.json', 'utf8'));
 const src    = readFileSync('./src/index.js', 'utf8');
-const banner = `/* stratum-sqlite v${pkg.version} | MIT license | https://github.com/bx-dojo/stratum-sqlite */`;
+const banner = `/* stratum-sqlite v${pkg.version} | MIT license | https://github.com/stratum-toolkit/stratum-sqlite */`;
 
 // Strip export keyword from declarations (shared step)
 const coreNoExportKeywords = src

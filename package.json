@@ -1,6 +1,6 @@
 {
   "name": "stratum-sqlite",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Load and query a read-only SQLite database on any static website (plain HTML, Quarto, Jekyll, Hugo, …). Zero server required.",
   "keywords": [
     "sqlite",
@@ -12,10 +12,10 @@
   ],
   "license": "MIT",
   "author": "Your Name <you@example.com>",
-  "homepage": "https://github.com/bx-dojo/stratum-sqlite#readme",
+  "homepage": "https://github.com/stratum-toolkit/stratum-sqlite#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bx-dojo/stratum-sqlite.git"
+    "url": "https://github.com/stratum-toolkit/stratum-sqlite.git"
   },
   "type": "module",
   "main": "dist/stratum-sqlite.umd.js",

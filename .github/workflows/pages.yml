@@ -1,0 +1,72 @@
+# .github/workflows/pages.yml
+#
+# Builds the library and deploys the demo site to GitHub Pages.
+# Runs on every push to main AND on version tags so that a release
+# always produces an up-to-date published site.
+#
+# Required GitHub settings:
+#   Settings → Pages → Source: GitHub Actions
+
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+    tags:     ['v*']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages:    write
+  id-token: write
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+
+    # Only the deploy step needs the github-pages environment.
+    # We still run the build steps on pull-requests to catch errors early,
+    # but skip the upload/deploy steps there (actions/deploy-pages does
+    # nothing on PRs — the environment gate prevents it).
+    environment:
+      name: github-pages
+      url:  ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build library
+        run: node build.mjs
+
+      - name: Download sql.js
+        run: |
+          mkdir -p docs/libs/sqljs
+          BASE="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3"
+          curl -sSfL "$BASE/sql-wasm.js"   -o docs/libs/sqljs/sql-wasm.js
+          curl -sSfL "$BASE/sql-wasm.wasm" -o docs/libs/sqljs/sql-wasm.wasm
+          echo "sql-wasm.js   $(wc -c < docs/libs/sqljs/sql-wasm.js) bytes"
+          echo "sql-wasm.wasm $(wc -c < docs/libs/sqljs/sql-wasm.wasm) bytes"
+
+      - name: Copy library into demo site
+        run: |
+          cp dist/stratum-sqlite.umd.js docs/libs/sqljs/stratum-sqlite.umd.js
+          cp dist/stratum-sqlite.esm.js docs/libs/sqljs/stratum-sqlite.esm.js
+
+      # Prevent Jekyll from mangling the .wasm MIME type
+      - name: Add .nojekyll
+        run: touch docs/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

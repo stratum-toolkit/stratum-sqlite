@@ -37,7 +37,7 @@ transparent caching.
 The fastest way to get the demo running locally:
 
 ```bash
-git clone https://github.com/bx-dojo/stratum-sqlite
+git clone https://github.com/stratum-toolkit/stratum-sqlite
 cd stratum-sqlite
 node build.mjs   # build the library
 bash setup.sh    # download sql.js binaries into docs/libs/sqljs/
@@ -59,7 +59,7 @@ python3 -m http.server 8000 --directory docs
    ```
 
    Then download `stratum-sqlite.umd.js` from the
-   [Releases page](https://github.com/bx-dojo/stratum-sqlite/releases) and
+   [Releases page](https://github.com/stratum-toolkit/stratum-sqlite/releases) and
    place it alongside sql.js:
 
    ```
@@ -231,7 +231,7 @@ Your SQLite file can be hosted anywhere with public HTTPS and
 ## Developing this library
 
 ```bash
-git clone https://github.com/bx-dojo/stratum-sqlite
+git clone https://github.com/stratum-toolkit/stratum-sqlite
 cd stratum-sqlite
 
 # 1. Build dist bundles

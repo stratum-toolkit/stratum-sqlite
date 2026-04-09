@@ -6,6 +6,11 @@ As this project is still in active development, it does not yet strictly adhere 
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-04-09
+### Changed
+- GitHub organizatin 
+- GitHub release action
+
 ## [0.1.1] - 2026-04-09
 ### Added
 - setup.sh script to download js libraries

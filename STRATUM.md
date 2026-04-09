@@ -199,8 +199,8 @@ requests, so DuckDB can query them without downloading the whole file.
 
 ## Repository links
 
-- **stratum-sqlite** — https://github.com/YOUR_USERNAME/stratum-sqlite
-- **stratum-duckdb** — https://github.com/YOUR_USERNAME/stratum-duckdb
+- **stratum-sqlite** — https://github.com/bx-dojo/stratum-sqlite
+- **stratum-duckdb** — https://github.com/bx-dojo/stratum-duckdb
 - **npm (sqlite)**   — https://www.npmjs.com/package/stratum-sqlite
 - **npm (duckdb)**   — https://www.npmjs.com/package/stratum-duckdb
 

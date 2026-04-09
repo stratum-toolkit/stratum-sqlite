@@ -1,4 +1,4 @@
-/* stratum-sqlite v1.0.0 | MIT | https://github.com/YOUR_USERNAME/stratum-sqlite */
+/* stratum-sqlite v0.1.0 | MIT license | https://github.com/bx-dojo/stratum-sqlite */
 /**
  * stratum-sqlite
  * Load and query a read-only SQLite database on any static website.
@@ -236,3 +236,5 @@ const StratumSQLite = { open, Database };
 
 
 
+export { open, Database };
+export default StratumSQLite;

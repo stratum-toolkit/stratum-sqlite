@@ -1,8 +1,9 @@
-/* stratum-sqlite v0.1.0 | MIT | https://github.com/bx-dojo/stratum-sqlite */
+/* stratum-sqlite v0.1.0 | MIT license | https://github.com/bx-dojo/stratum-sqlite */
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self,
-   global.StratumSQLite = factory());
+  typeof exports === 'object' && typeof module !== 'undefined'
+    ? module.exports = factory()
+    : (global = typeof globalThis !== 'undefined' ? globalThis : global || self,
+       global.StratumSQLite = factory());
 })(this, function () {
   'use strict';
 /**

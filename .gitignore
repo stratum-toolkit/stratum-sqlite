@@ -5,8 +5,9 @@ node_modules/
 docs/libs/sqljs/sql-wasm.js
 docs/libs/sqljs/sql-wasm.wasm
 
-# Keep the frozenql library copy (it's built from src/)
-!docs/libs/sqljs/frozenql.umd.js
-!docs/libs/sqljs/frozenql.esm.js
+# Keep the static-sqlite library copy (it's built from src/)
+!docs/libs/sqljs/static-sqlite.umd.js
+!docs/libs/sqljs/static-sqlite.esm.js
+
 /.project
 /.idea/

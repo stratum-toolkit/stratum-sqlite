@@ -1,6 +1,13 @@
-/* frozenql v0.1.0 | MIT | https://github.com/bx-dojo/frozenql */
+/* stratum-sqlite v0.1.0 | MIT license | https://github.com/bx-dojo/stratum-sqlite */
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined'
+    ? module.exports = factory()
+    : (global = typeof globalThis !== 'undefined' ? globalThis : global || self,
+       global.StratumSQLite = factory());
+})(this, function () {
+  'use strict';
 /**
- * frozenql
+ * stratum-sqlite
  * Load and query a read-only SQLite database on any static website.
  *
  * Works with plain HTML, Quarto / ObservableJS, Jekyll, Hugo, and any other
@@ -34,7 +41,7 @@ function loadScript(src) {
     s.src = src;
     s.crossOrigin = 'anonymous';
     s.onload = resolve;
-    s.onerror = () => reject(new Error(`frozenql: failed to load script: ${src}`));
+    s.onerror = () => reject(new Error(`stratum-sqlite: failed to load script: ${src}`));
     document.head.appendChild(s);
   });
 }
@@ -56,7 +63,7 @@ async function fetchWithCache(url, cacheKey, onProgress) {
   const cache = await caches.open(cacheKey);
 
   // Evict caches from older versions of the same key prefix.
-  // Convention: keys are "frozenql:<name>@<version>"
+  // Convention: keys are "stratum-sqlite:<name>@<version>"
   const prefix = cacheKey.replace(/@[^@]*$/, '@');
   const allKeys = await caches.keys();
   for (const key of allKeys) {
@@ -69,7 +76,7 @@ async function fetchWithCache(url, cacheKey, onProgress) {
   if (!cached) {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`frozenql: fetch failed (${response.status}) ${url}`);
+      throw new Error(`stratum-sqlite: fetch failed (${response.status}) ${url}`);
     }
     await cache.put(url, response.clone());
     cached = await cache.match(url);
@@ -81,7 +88,7 @@ async function fetchWithCache(url, cacheKey, onProgress) {
 async function plainFetch(url, onProgress) {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`frozenql: fetch failed (${response.status}) ${url}`);
+    throw new Error(`stratum-sqlite: fetch failed (${response.status}) ${url}`);
   }
   return streamToUint8Array(response, onProgress);
 }
@@ -182,7 +189,7 @@ class Database {
  *                                      Defaults to cdnjs. Set to a local path like
  *                                      "/libs/sqljs/" when serving sql.js yourself.
  * @property {string}   [cacheKey]    - Browser Cache API key.
- *                                      Defaults to "frozenql:<url>@1".
+ *                                      Defaults to "stratum-sqlite:<url>@1".
  *                                      Bump the version suffix to force a re-download
  *                                      when you publish a new database release.
  * @property {function} [onProgress]  - Called with (bytesLoaded, bytesTotal) during
@@ -200,19 +207,19 @@ class Database {
  * @returns {Promise<Database>}
  *
  * @example <caption>Plain HTML</caption>
- * const db = await FrozenQL.open("data/mydb.sqlite", {
+ * const db = await StratumSQLite.open("data/mydb.sqlite", {
  *   sqlJsPath: "libs/sqljs/",
  *   cacheKey:  "mydb@v1.2",
  * });
  * const rows = db.query("SELECT * FROM countries");
  *
  * @example <caption>Quarto / ObservableJS cell</caption>
- * db = FrozenQL.open(window._dbPath, { sqlJsPath: window._sqljsBase })
+ * db = StratumSQLite.open(window._dbPath, { sqlJsPath: window._sqljsBase })
  * rows = (await db).query("SELECT * FROM countries")
  */
 async function open(url, options = {}) {
   const sqlJsBase = options.sqlJsPath || DEFAULT_SQLJS_CDN;
-  const cacheKey  = options.cacheKey  || `frozenql:${url}@1`;
+  const cacheKey  = options.cacheKey  || `stratum-sqlite:${url}@1`;
   const onProgress = options.onProgress || null;
 
   // Ensure trailing slash on sqlJsBase
@@ -232,7 +239,9 @@ async function open(url, options = {}) {
   return new Database(new SQL.Database(bytes));
 }
 
-const FrozenQL = { open, Database };
+const StratumSQLite = { open, Database };
 
 
 
+  return StratumSQLite;
+});

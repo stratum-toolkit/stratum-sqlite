@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Table Viewer — frozenql demo</title>
+  <title>Table Viewer — stratum-sqlite demo</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <nav>
-  <span class="brand">🧊 frozenql</span>
+  <span class="brand">🪨 stratum-sqlite</span>
   <a href="index.html">Home</a>
   <a href="viewer.html" class="active">Table Viewer</a>
   <a href="query.html">SQL Console</a>
-  <a href="https://github.com/bx-dojo/frozenql">GitHub ↗</a>
+  <a href="https://github.com/bx-dojo/stratum-sqlite">GitHub ↗</a>
 </nav>
 
 <main>
@@ -43,12 +43,12 @@
 </main>
 
 <footer>
-  <p>frozenql — MIT license —
-  <a href="https://github.com/bx-dojo/frozenql">github.com/bx-dojo/frozenql</a></p>
+  <p>stratum-sqlite — MIT license —
+  <a href="https://github.com/bx-dojo/stratum-sqlite">github.com/bx-dojo/stratum-sqlite</a></p>
 </footer>
 
 <script src="libs/sqljs/sql-wasm.js"></script>
-<script src="libs/sqljs/frozenql.umd.js"></script>
+<script src="libs/sqljs/stratum-sqlite.umd.js"></script>
 
 <script type="module">
   const statusEl    = document.getElementById('status');
@@ -64,7 +64,7 @@
 
   // ── Load ─────────────────────────────────────────────────────────────────
   try {
-    db = await FrozenQL.open('data/countries.sqlite', {
+    db = await StratumSQLite.open('data/countries.sqlite', {
       sqlJsPath: 'libs/sqljs/',
       cacheKey:  'countries-demo@v1',  // same key → instant cache hit
     });

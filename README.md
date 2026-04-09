@@ -1,4 +1,4 @@
-# frozenql
+# stratum-sqlite
 
 Load and query a **read-only SQLite database on any static website** — plain HTML,
 Quarto, Jekyll, Hugo, and more. No server. No backend.
@@ -25,16 +25,30 @@ Your browser                          Your static site server
 ```
 
 sql.js compiles SQLite to WebAssembly and runs it entirely in the browser.
-`frozenql` wraps sql.js with a simple `open()` / `query()` API and adds
+`stratum-sqlite` wraps sql.js with a simple `open()` / `query()` API and adds
 transparent caching.
 
 ---
 
 ## Quick start
 
-### Option A — Self-hosted (recommended, works in restricted environments)
+### For the demo site (local preview)
 
-1. **Download sql.js** (once, add to your project):
+The fastest way to get the demo running locally:
+
+```bash
+git clone https://github.com/bx-dojo/stratum-sqlite
+cd stratum-sqlite
+node build.mjs   # build the library
+bash setup.sh    # download sql.js binaries into docs/libs/sqljs/
+python3 -m http.server 8000 --directory docs
+# open http://localhost:8000
+```
+
+### Option A — Self-hosted (for your own project)
+
+1. **Download sql.js and the library** using `setup.sh` (if you have the repo),
+   or manually:
 
    ```bash
    mkdir -p libs/sqljs
@@ -44,25 +58,26 @@ transparent caching.
         -o libs/sqljs/sql-wasm.wasm
    ```
 
-2. **Download frozenql.umd.js** from the [Releases page](https://github.com/bx-dojo/frozenql/releases)
-   and put it alongside sql.js:
+   Then download `stratum-sqlite.umd.js` from the
+   [Releases page](https://github.com/bx-dojo/stratum-sqlite/releases) and
+   place it alongside sql.js:
 
    ```
    libs/
    └── sqljs/
        ├── sql-wasm.js
        ├── sql-wasm.wasm
-       └── frozenql.umd.js
+       └── stratum-sqlite.umd.js
    ```
 
-3. **Use it in your HTML**:
+2. **Use it in your HTML**:
 
    ```html
    <script src="libs/sqljs/sql-wasm.js"></script>
-   <script src="libs/sqljs/frozenql.umd.js"></script>
+   <script src="libs/sqljs/stratum-sqlite.umd.js"></script>
 
    <script type="module">
-     const db = await FrozenQL.open("data/mydb.sqlite", {
+     const db = await StratumSQLite.open("data/mydb.sqlite", {
        sqlJsPath: "libs/sqljs/",
        cacheKey:  "mydb@v1",       // bump version when you publish a new DB
      });
@@ -75,13 +90,13 @@ transparent caching.
 ### Option B — npm + bundler
 
 ```bash
-npm install frozenql
+npm install stratum-sqlite
 ```
 
 ```js
-import FrozenQL from 'frozenql';
+import StratumSQLite from 'stratum-sqlite';
 
-const db = await FrozenQL.open("/data/mydb.sqlite", {
+const db = await StratumSQLite.open("/data/mydb.sqlite", {
   sqlJsPath: "/libs/sqljs/",
   cacheKey:  "mydb@v1",
 });
@@ -93,14 +108,14 @@ const rows = db.query("SELECT * FROM countries");
 
 ## API
 
-### `FrozenQL.open(url, options)` → `Promise<Database>`
+### `StratumSQLite.open(url, options)` → `Promise<Database>`
 
 Fetches the SQLite file at `url` and returns a `Database` instance.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `sqlJsPath` | `string` | cdnjs URL | Path (relative or absolute) to the folder containing `sql-wasm.js` and `sql-wasm.wasm`. |
-| `cacheKey` | `string` | `"frozenql:<url>@1"` | Browser Cache API bucket name. Bump the suffix (e.g. `@v2`) to force a re-download on your next publish. |
+| `cacheKey` | `string` | `"stratum-sqlite:<url>@1"` | Browser Cache API bucket name. Bump the suffix (e.g. `@v2`) to force a re-download on your next publish. |
 | `onProgress` | `function(loaded, total)` | — | Called during the first download to update a loading bar. |
 
 ### `db.query(sql, params?)` → `Array<Object>`
@@ -209,44 +224,34 @@ Your SQLite file can be hosted anywhere with public HTTPS and
 
 1. Publish the new `.sqlite` file to your chosen host.
 2. Bump the `cacheKey` option: `"mydb@v1"` → `"mydb@v2"`.
-   `frozenql` automatically evicts the old cached file on next page load.
+   `stratum-sqlite` automatically evicts the old cached file on next page load.
 
 ---
 
 ## Developing this library
 
 ```bash
-git clone https://github.com/bx-dojo/frozenql
-cd frozenql
+git clone https://github.com/bx-dojo/stratum-sqlite
+cd stratum-sqlite
 
-# Build dist bundles
+# 1. Build dist bundles
 node build.mjs
 
-# Watch mode
-node build.mjs --watch
+# 2. Download sql.js binaries and copy the built library (one command)
+bash setup.sh
 
-# Create sample database (Python)
-python3 scripts/create_demo_db.py
+# 3. Create sample database if needed
+python3 scripts/create_demo_db.py   # Python
+Rscript scripts/create_demo_db.R    # R
 
-# Create sample database (R)
-Rscript scripts/create_demo_db.R
-
-# Serve demo site locally (Python)
+# 4. Serve demo site
 python3 -m http.server 8000 --directory docs
-# then open http://localhost:8000
+# open http://localhost:8000
 ```
 
-> **Note:** When serving locally, first run the download step from the GitHub
-> Actions workflow manually to populate `docs/libs/sqljs/`:
->
-> ```bash
-> mkdir -p docs/libs/sqljs
-> curl -sSfL https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js \
->      -o docs/libs/sqljs/sql-wasm.js
-> curl -sSfL https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.wasm \
->      -o docs/libs/sqljs/sql-wasm.wasm
-> cp dist/frozenql.umd.js docs/libs/sqljs/
-> ```
+`setup.sh` downloads `sql-wasm.js` and `sql-wasm.wasm` from cdnjs into
+`docs/libs/sqljs/` and copies the built library there. These binary files
+are in `.gitignore` — the CI pipeline downloads them fresh on every deploy.
 
 ---
 

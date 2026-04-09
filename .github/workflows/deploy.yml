@@ -15,7 +15,7 @@ name: Deploy
 on:
   push:
     branches: [main]
-    #tags:     ['v*']      # v1.0.0, v1.2.3, …
+#    tags:     ['v*']      # v1.0.0, v1.2.3, …
   pull_request:
     branches: [main]
 
@@ -59,8 +59,8 @@ jobs:
       # Copy the built library into the demo so it works standalone
       - name: Copy library into demo site
         run: |
-          cp dist/frozenql.umd.js docs/libs/sqljs/frozenql.umd.js
-          cp dist/frozenql.esm.js docs/libs/sqljs/frozenql.esm.js
+          cp dist/stratum-sqlite.umd.js docs/libs/sqljs/stratum-sqlite.umd.js
+          cp dist/stratum-sqlite.esm.js docs/libs/sqljs/stratum-sqlite.esm.js
 
       # Prevent Jekyll from mangling the site (the .wasm mime type breaks with Jekyll)
       - name: Add .nojekyll

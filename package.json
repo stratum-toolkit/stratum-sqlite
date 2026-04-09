@@ -1,37 +1,51 @@
 {
-  "name": "frozenql",
+  "name": "stratum-sqlite",
   "version": "0.1.0",
   "description": "Load and query a read-only SQLite database on any static website (plain HTML, Quarto, Jekyll, Hugo, …). Zero server required.",
-  "keywords": ["sqlite", "static-site", "quarto", "observablejs", "indexeddb", "sql"],
+  "keywords": [
+    "sqlite",
+    "static-site",
+    "quarto",
+    "observablejs",
+    "indexeddb",
+    "sql"
+  ],
   "license": "MIT",
   "author": "Your Name <you@example.com>",
-  "homepage": "https://github.com/bx-dojo/frozenql#readme",
+  "homepage": "https://github.com/bx-dojo/stratum-sqlite#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bx-dojo/frozenql.git"
+    "url": "https://github.com/bx-dojo/stratum-sqlite.git"
   },
   "type": "module",
-  "main":   "dist/frozenql.umd.js",
-  "module": "dist/frozenql.esm.js",
+  "main": "dist/stratum-sqlite.umd.js",
+  "module": "dist/stratum-sqlite.esm.js",
   "exports": {
     ".": {
-      "import":  "./dist/frozenql.esm.js",
-      "require": "./dist/frozenql.umd.js"
+      "import": "./dist/stratum-sqlite.esm.js",
+      "require": "./dist/stratum-sqlite.umd.js"
     }
   },
-  "files": ["dist", "src", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build":    "node build.mjs",
-    "dev":      "node build.mjs --watch",
-    "prepare":  "npm run build"
+    "build": "node build.mjs",
+    "dev": "node build.mjs --watch",
+    "prepare": "npm run build"
   },
   "devDependencies": {
-    "esbuild": "^0.21.0"
+    "esbuild": "^0.28.0"
   },
   "peerDependencies": {
     "sql.js": ">=1.10.0"
   },
   "peerDependenciesMeta": {
-    "sql.js": { "optional": true }
+    "sql.js": {
+      "optional": true
+    }
   }
 }

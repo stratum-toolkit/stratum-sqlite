@@ -1,50 +1,54 @@
 // build.mjs  –  builds two bundles from src/index.js
-//   dist/frozenql.umd.js   IIFE  global FrozenQL  (for <script> tags)
-//   dist/frozenql.esm.js   ES module                  (for import / bundlers)
+//   dist/stratum-sqlite.umd.js   IIFE global StratumSQLite  (for <script> tags)
+//   dist/stratum-sqlite.esm.js   ES module with export default (for import() / bundlers)
 //
 // Run:  node build.mjs
-//       node build.mjs --watch
 
-import esbuild from 'esbuild';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 
-const pkg     = JSON.parse(readFileSync('./package.json', 'utf8'));
-const watch   = process.argv.includes('--watch');
-const banner  = `/* frozenql v${pkg.version} | MIT license | https://github.com/bx-dojo/frozenql */`;
+const pkg    = JSON.parse(readFileSync('./package.json', 'utf8'));
+const src    = readFileSync('./src/index.js', 'utf8');
+const banner = `/* stratum-sqlite v${pkg.version} | MIT license | https://github.com/bx-dojo/stratum-sqlite */`;
 
-const shared = {
-  entryPoints: ['src/index.js'],
-  bundle:      true,
-  sourcemap:   true,
-  banner:      { js: banner },
-  // sql.js is loaded at runtime via a <script> tag, NOT bundled in.
-  // We mark initSqlJs as external so esbuild leaves the global reference alone.
-  external:    [],
-};
+// Strip export keyword from declarations (shared step)
+const coreNoExportKeywords = src
+  .replace(/^export\s+(async\s+function|function|class|const|let|var)\s+/mg, '$1 ');
 
-async function build() {
-  // ── IIFE (UMD-style) for plain <script> tags ─────────────────────────────
-  await esbuild.build({
-    ...shared,
-    format:     'iife',
-    globalName: 'FrozenQL',
-    outfile:    'dist/frozenql.umd.js',
-  });
+// ESM build — add explicit named + default exports at the end
+const esmCore = coreNoExportKeywords
+  .replace(/^export\s*\{[^}]*\};\s*$/m, '')
+  .replace(/^export\s+default\s+\w+;\s*$/m, '');
 
-  // ── ES module for import / bundlers ──────────────────────────────────────
-  await esbuild.build({
-    ...shared,
-    format:  'esm',
-    outfile: 'dist/frozenql.esm.js',
-  });
+const esm = `${banner}
+${esmCore}
+export { open, Database };
+export default StratumSQLite;
+`;
 
-  console.log(`✓  built  dist/frozenql.umd.js  +  dist/frozenql.esm.js`);
-}
+// UMD/IIFE build — no export statements, sets global
+const umdCore = coreNoExportKeywords
+  .replace(/^export\s*\{[^}]*\};\s*$/m, '')
+  .replace(/^export\s+default\s+\w+;\s*$/m, '');
 
-if (watch) {
-  const ctx = await esbuild.context({ ...shared, format: 'iife', globalName: 'FrozenQL', outfile: 'dist/frozenql.umd.js' });
-  await ctx.watch();
-  console.log('Watching…');
-} else {
-  await build();
-}
+const umd = `${banner}
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined'
+    ? module.exports = factory()
+    : (global = typeof globalThis !== 'undefined' ? globalThis : global || self,
+       global.StratumSQLite = factory());
+})(this, function () {
+  'use strict';
+${umdCore}
+  return StratumSQLite;
+});
+`;
+
+writeFileSync('dist/stratum-sqlite.esm.js', esm);
+writeFileSync('dist/stratum-sqlite.umd.js', umd);
+
+console.log(`✓  dist/stratum-sqlite.esm.js  ${Buffer.byteLength(esm).toLocaleString()} bytes`);
+console.log(`✓  dist/stratum-sqlite.umd.js  ${Buffer.byteLength(umd).toLocaleString()} bytes`);
+
+if (!esm.includes('export default StratumSQLite')) { console.error('ERROR: export default missing!'); process.exit(1); }
+if (umd.includes('\nexport '))                      { console.error('ERROR: export in UMD!');          process.exit(1); }
+console.log('✓  export checks passed');

@@ -48,7 +48,7 @@
       }).then(resolve).catch(reject);
     };
     s.onerror = function () {
-      reject(new Error('frozenql: failed to load sql.js from ' + s.src));
+      reject(new Error('stratum-sqlite: failed to load sql.js from ' + s.src));
     };
     document.head.appendChild(s);
   });

@@ -11,11 +11,11 @@
     "sql"
   ],
   "license": "MIT",
-  "author": "Your Name <you@example.com>",
+  "author": "Takaya Saito <takaya.saito@outlook.com>",
   "homepage": "https://github.com/stratum-toolkit/stratum-sqlite#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/stratum-toolkit/stratum-sqlite.git"
+    "url": "git+https://github.com/stratum-toolkit/stratum-sqlite.git"
   },
   "type": "module",
   "main": "dist/stratum-sqlite.umd.js",
@@ -36,9 +36,6 @@
     "build": "node build.mjs",
     "dev": "node build.mjs --watch",
     "prepare": "npm run build"
-  },
-  "devDependencies": {
-    "esbuild": "^0.28.0"
   },
   "peerDependencies": {
     "sql.js": ">=1.10.0"

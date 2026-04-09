@@ -1,12 +1,3 @@
-# .github/workflows/npm.yml
-#
-# Publishes the library to npm on version tags (v0.1.0, v1.2.3, …).
-# Runs independently of pages.yml — no dependency between the two.
-#
-# Required repository secret:
-#   NPM_TOKEN — your npm automation token
-#   (Settings → Secrets and variables → Actions → New repository secret)
-
 name: Publish to npm
 
 on:
@@ -19,13 +10,12 @@ permissions:
 jobs:
   npm:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Build library

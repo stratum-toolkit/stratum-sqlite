@@ -5,7 +5,8 @@ on:
     tags: ['v*']
 
 permissions:
-  contents: read
+  contents: write   # ← changed from read — needed to upload release assets
+  id-token: write   # ← only if using Trusted Publishing, otherwise remove
 
 jobs:
   npm:
@@ -25,3 +26,18 @@ jobs:
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Create a GitHub release and upload the built JS files as assets.
+      # This makes them available at:
+      #   https://github.com/stratum-toolkit/stratum-sqlite/releases/latest/download/stratum-sqlite.umd.js
+      #   https://github.com/stratum-toolkit/stratum-sqlite/releases/latest/download/stratum-sqlite.esm.js
+      - name: Create GitHub release and upload assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes \
+            dist/stratum-sqlite.umd.js \
+            dist/stratum-sqlite.esm.js

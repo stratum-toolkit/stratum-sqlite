@@ -1,6 +1,6 @@
 {
   "name": "stratum-sqlite",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Load and query a read-only SQLite database on any static website (plain HTML, Quarto, Jekyll, Hugo, …). Zero server required.",
   "keywords": [
     "sqlite",

@@ -1,4 +1,4 @@
-/* stratum-sqlite v0.1.5 | MIT license | https://github.com/stratum-toolkit/stratum-sqlite */
+/* stratum-sqlite v0.1.6 | MIT license | https://github.com/stratum-toolkit/stratum-sqlite */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined'
     ? module.exports = factory()

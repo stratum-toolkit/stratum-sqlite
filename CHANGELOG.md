@@ -6,6 +6,10 @@ As this project is still in active development, it does not yet strictly adhere 
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-04-12
+### Added
+- unit and integration tests
+
 ## [0.1.6] - 2026-04-11
 ### Changed
 - README and index.html

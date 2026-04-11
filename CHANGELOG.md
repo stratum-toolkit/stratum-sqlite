@@ -6,6 +6,15 @@ As this project is still in active development, it does not yet strictly adhere 
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-04-11
+### Changed
+- README and index.html
+- Footer in html pages
+
+## [0.1.5] - 2026-04-11
+### Changed
+- GitHub npm release action
+
 ## [0.1.4] - 2026-04-09
 ### Fixed
 - Incorrect package version

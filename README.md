@@ -58,16 +58,17 @@ python3 -m http.server 8000 --directory docs
         -o libs/sqljs/sql-wasm.wasm
    ```
 
-   Then download `stratum-sqlite.umd.js` from the
+   Then download `stratum-sqlite.umd.js` and `stratum-sqlite.esm.js` from the
    [Releases page](https://github.com/stratum-toolkit/stratum-sqlite/releases) and
-   place it alongside sql.js:
+   place them alongside sql.js:
 
    ```
    libs/
    └── sqljs/
        ├── sql-wasm.js
        ├── sql-wasm.wasm
-       └── stratum-sqlite.umd.js
+       ├── stratum-sqlite.umd.js   ← for plain HTML (<script> tag)
+       └── stratum-sqlite.esm.js   ← for Quarto / dynamic import()
    ```
 
 2. **Use it in your HTML**:
@@ -143,66 +144,77 @@ Returns the total row count of a table.
 
 ## Quarto / ObservableJS integration
 
-Add `_sqljs-init.html` to your project root:
+Add the following block to your project's `header.html`
+(included on every page via `_quarto.yml`).
+
+### `header.html`
 
 ```html
-<!-- _sqljs-init.html -->
 <script>
 (function () {
-  // Detect page depth by reading the relative path of any Quarto site_libs script.
+  // Detect page depth from Quarto's injected site_libs/ script path.
+  // Works for pages at any subdirectory depth without hardcoding.
   var siteLibScript = document.querySelector('script[src*="site_libs/"]');
   var root = siteLibScript
     ? siteLibScript.getAttribute('src').replace(/site_libs\/.*$/, '')
     : '';
 
-  window._dbPath    = root + 'data/mydb.sqlite';
   window._sqljsBase = root + 'libs/sqljs/';
+  window._dbPath    = root + 'data/mydb.sqlite';   // adjust to your DB path
 
-  window._sqlJsReady = new Promise(function (resolve, reject) {
-    var s = document.createElement('script');
-    s.src = window._sqljsBase + 'sql-wasm.js';
-    s.onload = function () {
-      initSqlJs({ locateFile: function () { return window._sqljsBase + 'sql-wasm.wasm'; } })
-        .then(resolve).catch(reject);
-    };
-    s.onerror = function () { reject(new Error('sql.js load failed: ' + s.src)); };
-    document.head.appendChild(s);
-  });
+  // Resolve to an absolute URL — import() rejects bare relative paths.
+  var esmUrl = new URL(
+    window._sqljsBase + 'stratum-sqlite.esm.js',
+    window.location.href
+  ).href;
+
+  // Expose stratum-sqlite as a Promise. OJS cells start evaluating before
+  // dynamically loaded scripts are ready, so a plain global is unreliable.
+  // Awaiting this Promise guarantees the library is fully loaded.
+  window._stratumSQLite = import(esmUrl)
+    .then(function (m) { return m.default; });
 }());
 </script>
 ```
 
-In `_quarto.yml`:
+### `_quarto.yml`
 
 ```yaml
 format:
   html:
-    include-in-header: _sqljs-init.html
+    include-in-header: header.html
+project:
+  resources:
+    - libs/sqljs/     # must contain sql-wasm.js, sql-wasm.wasm,
+                      # stratum-sqlite.umd.js, and stratum-sqlite.esm.js
+    - data/mydb.sqlite
 ```
 
-In any `.qmd` file:
+### Any `.qmd` page
 
 ```{ojs}
+// Await the library Promise before calling open().
+// db resolves to a ready Database instance — other OJS cells
+// that reference db receive the resolved value automatically.
 db = {
-  const SqlJs = await window._sqlJsReady;
-  const r     = await fetch(window._dbPath);
-  const raw   = new SqlJs.Database(new Uint8Array(await r.arrayBuffer()));
-  return {
-    query: sql => {
-      const res = raw.exec(sql);
-      if (!res.length) return [];
-      const { columns, values } = res[0];
-      return values.map(row =>
-        Object.fromEntries(columns.map((c, i) => [c, row[i]])));
-    }
-  };
+  const StratumSQLite = await window._stratumSQLite;
+  return StratumSQLite.open(window._dbPath, {
+    sqlJsPath: window._sqljsBase,
+    cacheKey:  "mydb@v1",   // bump when you publish a new DB release
+  });
 }
 
-rows = (await db).query("SELECT * FROM countries")
+rows = db.query("SELECT * FROM countries")
 Inputs.table(rows)
 ```
 
----
+> **Why `import()` instead of a `<script>` tag?**
+> Quarto's OJS runtime evaluates cells before dynamically injected `<script>`
+> tags finish loading, so `window.StratumSQLite` is `undefined` when OJS first
+> runs. Dynamic `import()` returns a Promise that OJS can `await` safely.
+> It also requires an absolute URL — `new URL(path, location.href).href`
+> converts the relative path before passing it to `import()`.
+
 
 ## Hosting your database
 

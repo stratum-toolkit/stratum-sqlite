@@ -71,34 +71,41 @@
 
   <section class="card">
     <h2>Quick start — Quarto / ObservableJS</h2>
-    <pre><code>&lt;!-- In _sqljs-init.html (injected via _quarto.yml) --&gt;
+    <p>Add this block to your project's <code>header.html</code> (included via <code>_quarto.yml</code>).
+    It loads stratum-sqlite via <code>import()</code> and exposes it as a Promise
+    that OJS cells can safely <code>await</code>.</p>
+    <pre><code>&lt;!-- In header.html — loaded on every page via _quarto.yml --&gt;
 &lt;script&gt;
-  window._dbPath    = "data/mydb.sqlite";
-  window._sqljsBase = "libs/sqljs/";
-  window._sqlJsReady = new Promise((res, rej) =&gt; {
-    const s = document.createElement("script");
-    s.src = window._sqljsBase + "sql-wasm.js";
-    s.onload = () =&gt;
-      initSqlJs({ locateFile: () =&gt; window._sqljsBase + "sql-wasm.wasm" })
-        .then(res).catch(rej);
-    s.onerror = () =&gt; rej(new Error("sql.js load failed"));
-    document.head.appendChild(s);
-  });
+(function () {
+  var siteLibScript = document.querySelector('script[src*="site_libs/"]');
+  var root = siteLibScript
+    ? siteLibScript.getAttribute('src').replace(/site_libs\/.*$/, '')
+    : '';
+
+  window._sqljsBase = root + 'libs/sqljs/';
+  window._dbPath    = root + 'data/mydb.sqlite';
+
+  // Resolve to an absolute URL — import() rejects bare relative paths.
+  var esmUrl = new URL(window._sqljsBase + 'stratum-sqlite.esm.js',
+                       window.location.href).href;
+
+  // OJS cells await this Promise to get the StratumSQLite object.
+  window._stratumSQLite = import(esmUrl)
+    .then(function (m) { return m.default; });
+}());
 &lt;/script&gt;
 
 // In your .qmd file (OJS cell):
 db = {
-  const SqlJs = await window._sqlJsReady;
-  const r     = await fetch(window._dbPath);
-  const raw   = new SqlJs.Database(new Uint8Array(await r.arrayBuffer()));
-  return { query: sql =&gt; {
-    const res = raw.exec(sql);
-    if (!res.length) return [];
-    const { columns, values } = res[0];
-    return values.map(row =&gt;
-      Object.fromEntries(columns.map((c, i) =&gt; [c, row[i]])));
-  }};
-}</code></pre>
+  const StratumSQLite = await window._stratumSQLite;
+  return StratumSQLite.open(window._dbPath, {
+    sqlJsPath: window._sqljsBase,
+    cacheKey:  "mydb@v1",
+  });
+}
+
+rows = db.query("SELECT * FROM countries")
+Inputs.table(rows)</code></pre>
   </section>
 
   <section class="card">
@@ -117,8 +124,9 @@ db = {
 </main>
 
 <footer>
-  <p>stratum-sqlite — MIT license —
-  <a href="https://github.com/stratum-toolkit/stratum-sqlite">github.com/stratum-toolkit/stratum-sqlite</a></p>
+  <p>stratum-sqlite — part of the
+    <a href="https://github.com/stratum-toolkit">Stratum toolkit</a>
+    — MIT license</p>
 </footer>
 
 <!-- sql.js and stratum-sqlite (served locally, no CDN) -->

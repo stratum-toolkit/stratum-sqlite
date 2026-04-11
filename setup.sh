@@ -25,10 +25,11 @@ for FILE in sql-wasm.js sql-wasm.wasm; do
   fi
 done
 
-echo ""
-echo "↓  Copying stratum-sqlite.umd.js …"
+echo "↓  Copying library files …"
 cp dist/stratum-sqlite.umd.js "$LIBDIR/stratum-sqlite.umd.js"
+cp dist/stratum-sqlite.esm.js "$LIBDIR/stratum-sqlite.esm.js"
 echo "✓  stratum-sqlite.umd.js"
+echo "✓  stratum-sqlite.esm.js"
 
 echo ""
 echo "=== Files in $LIBDIR/ ==="

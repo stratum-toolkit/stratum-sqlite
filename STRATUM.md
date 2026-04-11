@@ -30,6 +30,26 @@ compatible with Observable JS, plain HTML, Quarto, Jekyll, and Hugo.
 | I need offline-first / zero CDN | → **stratum-sqlite** (sql.js is self-contained) |
 | I'm writing a Quarto / OJS page | → either works |
 
+## Feature comparison
+
+| Feature | stratum-sqlite | stratum-duckdb |
+|---------|---------------|----------------|
+| File format | `.sqlite` | `.parquet` `.csv` `.json` |
+| Database style | Transactional (OLTP) | Analytical (OLAP) |
+| Window functions | Limited | Full |
+| Remote file query without full download | No | Yes — HTTP range requests |
+| Join across multiple remote files | No | Yes |
+| WASM bundle size | ~1 MB | ~6 MB |
+| Best dataset size | Small–medium (<100 MB) | Medium–large (GB+) |
+| Native research repo format | No | Parquet (Zenodo, HF, AWS) |
+| R / Python interop | RSQLite, DBI | arrow, duckdb packages |
+| Browser Cache API | Built-in | Built-in |
+| Quarto / OJS compatible | Yes | Yes |
+
+**Rule of thumb:** use stratum-sqlite when your data is already a SQLite file
+or is small and relational. Use stratum-duckdb when you need analytical queries,
+Parquet files, or data too large to download in full.
+
 ---
 
 ## Architecture overview

@@ -1,4 +1,4 @@
-/* stratum-sqlite v0.1.6 | MIT license | https://github.com/stratum-toolkit/stratum-sqlite */
+/* stratum-sqlite v0.1.7 | MIT license | https://github.com/stratum-toolkit/stratum-sqlite */
 /**
  * stratum-sqlite
  * Load and query a read-only SQLite database on any static website.

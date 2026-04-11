@@ -1,6 +1,6 @@
 {
   "name": "stratum-sqlite",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Load and query a read-only SQLite database on any static website (plain HTML, Quarto, Jekyll, Hugo, …). Zero server required.",
   "keywords": [
     "sqlite",
@@ -35,7 +35,10 @@
   "scripts": {
     "build": "node build.mjs",
     "dev": "node build.mjs --watch",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "test": "node --test tests/unit.test.mjs",
+    "test:integration": "node --test tests/integration.test.mjs",
+    "test:all": "node --test tests/unit.test.mjs && node --test tests/integration.test.mjs"
   },
   "peerDependencies": {
     "sql.js": ">=1.10.0"
@@ -44,5 +47,8 @@
     "sql.js": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
   }
 }

@@ -12,11 +12,10 @@ permissions:
   id-token: write
 
 jobs:
-  pages:
+
+  # ── 1. Build ──────────────────────────────────────────────────────────────
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url:  ${{ steps.deploy.outputs.page_url }}
 
     steps:
       - uses: actions/checkout@v5
@@ -29,7 +28,7 @@ jobs:
       - name: Build library
         run: node build.mjs
 
-      - name: Download sql.js          # stratum-sqlite only — replace with DuckDB steps for stratum-duckdb
+      - name: Download sql.js
         run: |
           mkdir -p docs/libs/sqljs
           BASE="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3"
@@ -44,11 +43,75 @@ jobs:
       - name: Add .nojekyll
         run: touch docs/.nojekyll
 
+      # Upload the built site as an artifact so test and deploy jobs can use it
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: docs/
+
+      # Also upload Pages artifact for the deploy job
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/
 
+  # ── 2. Unit tests (no browser needed) ────────────────────────────────────
+  unit-test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Build library
+        run: node build.mjs
+
+      - name: Run unit tests
+        run: node --test tests/unit.test.mjs
+
+  # ── 3. Integration tests (real Chromium via Playwright) ───────────────────
+  integration-test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      # Download the built site artifact from the build job
+      - name: Download site artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: docs/
+
+      - name: Install Playwright
+        run: |
+          npm install --save-dev @playwright/test
+          npx playwright install chromium --with-deps
+
+      - name: Run integration tests
+        run: node --test tests/integration.test.mjs
+
+  # ── 4. Deploy (only if both test jobs pass) ───────────────────────────────
+  deploy:
+    needs: [unit-test, integration-test]
+    # Only deploy on pushes to main, not on pull requests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url:  ${{ steps.deploy.outputs.page_url }}
+    permissions:
+      pages:    write
+      id-token: write
+    steps:
       - name: Deploy to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v4
